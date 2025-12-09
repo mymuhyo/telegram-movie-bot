@@ -1,4 +1,5 @@
 """Admin movie handlers with FSM for adding/editing/deleting movies."""
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -18,6 +19,7 @@ router = Router(name="admin_movies")
 
 class AddMovieStates(StatesGroup):
     """States for adding a movie."""
+
     waiting_video = State()
     waiting_title = State()
     waiting_code = State()
@@ -25,6 +27,7 @@ class AddMovieStates(StatesGroup):
 
 class EditMovieStates(StatesGroup):
     """States for editing a movie."""
+
     waiting_code = State()
     waiting_choice = State()
     waiting_new_title = State()
@@ -34,11 +37,13 @@ class EditMovieStates(StatesGroup):
 
 class DeleteMovieStates(StatesGroup):
     """States for deleting a movie."""
+
     waiting_code = State()
     confirm = State()
 
 
 # ========== ADD MOVIE ==========
+
 
 @router.callback_query(F.data == "admin:add_movie")
 async def callback_add_movie_start(
@@ -67,11 +72,11 @@ async def handle_add_movie_video(
     """Handle video upload - only accepts forwarded videos from channel."""
     # Check if video is forwarded (has forward_origin or forward_from_chat)
     is_forwarded = (
-        message.forward_origin is not None or 
-        message.forward_from_chat is not None or
-        message.forward_from is not None
+        message.forward_origin is not None
+        or message.forward_from_chat is not None
+        or message.forward_from is not None
     )
-    
+
     if not is_forwarded:
         await message.answer(
             "⚠️ Faqat kanaldan forward qilingan video qabul qilinadi!\n\n"
@@ -82,10 +87,10 @@ async def handle_add_movie_video(
             reply_markup=get_back_to_admin_keyboard(),
         )
         return
-    
+
     file_id = message.video.file_id
     await state.update_data(file_id=file_id)
-    
+
     await message.answer(
         messages.ADD_MOVIE_TITLE,
         reply_markup=get_back_to_admin_keyboard(),
@@ -112,7 +117,7 @@ async def handle_add_movie_title(
     if len(title) < 2:
         await message.answer("❌ Nom juda qisqa! Kamida 2 ta belgi kiriting.")
         return
-    
+
     await state.update_data(title=title)
     await message.answer(
         messages.ADD_MOVIE_CODE,
@@ -133,20 +138,18 @@ async def handle_add_movie_code(
     if not message.text.isdigit():
         await message.answer("❌ Faqat raqam kiriting!")
         return
-    
+
     code = int(message.text)
-    
+
     # Check if code exists
     existing = await uow.movies.get_by_code(code)
     if existing:
-        await message.answer(
-            messages.ADD_MOVIE_CODE_EXISTS.format(title=existing.title)
-        )
+        await message.answer(messages.ADD_MOVIE_CODE_EXISTS.format(title=existing.title))
         return
-    
+
     # Get stored data
     data = await state.get_data()
-    
+
     # Create movie
     movie = MovieModel(
         code=code,
@@ -154,10 +157,10 @@ async def handle_add_movie_code(
         file_id=data["file_id"],
         added_by=admin.telegram_id,
     )
-    
+
     await uow.movies.create(movie)
     await state.clear()
-    
+
     await message.answer(
         messages.ADD_MOVIE_SUCCESS.format(
             title=data["title"],
@@ -165,7 +168,7 @@ async def handle_add_movie_code(
         ),
         reply_markup=get_back_to_admin_keyboard(),
     )
-    
+
     logger.info(
         "movie_added",
         code=code,
@@ -175,6 +178,7 @@ async def handle_add_movie_code(
 
 
 # ========== DELETE MOVIE ==========
+
 
 @router.callback_query(F.data == "admin:delete_movie")
 async def callback_delete_movie_start(
@@ -205,17 +209,18 @@ async def handle_delete_movie_code(
     if not message.text.isdigit():
         await message.answer("❌ Faqat raqam kiriting!")
         return
-    
+
     code = int(message.text)
     movie = await uow.movies.get_by_code(code)
-    
+
     if not movie:
         await message.answer(f"❌ Kod {code} topilmadi!")
         return
-    
+
     await state.update_data(code=code, movie_id=str(movie.id))
-    
+
     from src.bot.keyboards.admin import get_confirm_keyboard
+
     await message.answer(
         messages.DELETE_MOVIE_CONFIRM.format(
             title=movie.title,
@@ -234,7 +239,7 @@ async def callback_confirm_delete(
 ) -> None:
     """Confirm movie deletion."""
     code = int(callback.data.split(":")[2])
-    
+
     movie = await uow.movies.get_by_code(code)
     if movie:
         await uow.movies.soft_delete(movie.id)
@@ -248,12 +253,13 @@ async def callback_confirm_delete(
             messages.NOT_FOUND,
             reply_markup=get_back_to_admin_keyboard(),
         )
-    
+
     await state.clear()
     await callback.answer()
 
 
 # ========== CANCEL ==========
+
 
 @router.callback_query(F.data == "admin:panel", AddMovieStates)
 @router.callback_query(F.data == "admin:panel", DeleteMovieStates)
@@ -268,6 +274,7 @@ async def callback_cancel_state(
 
 
 # ========== EDIT MOVIE ==========
+
 
 @router.callback_query(F.data == "admin:edit_movie")
 async def callback_edit_movie_start(
@@ -298,17 +305,18 @@ async def handle_edit_movie_code(
     if not message.text.isdigit():
         await message.answer("❌ Faqat raqam kiriting!")
         return
-    
+
     code = int(message.text)
     movie = await uow.movies.get_by_code(code)
-    
+
     if not movie:
         await message.answer(f"❌ Kod {code} topilmadi!")
         return
-    
+
     await state.update_data(code=code, movie_id=str(movie.id))
-    
+
     from src.bot.keyboards.admin import get_movie_edit_keyboard
+
     await message.answer(
         messages.EDIT_MOVIE_INFO.format(
             title=movie.title,
@@ -345,21 +353,21 @@ async def handle_new_title(
     if len(new_title) < 2:
         await message.answer("❌ Nom juda qisqa!")
         return
-    
+
     data = await state.get_data()
     code = data["code"]
-    
+
     movie = await uow.movies.get_by_code(code)
     if movie:
         movie.title = new_title
         await uow.movies.update(movie)
-        
+
         await message.answer(
             messages.EDIT_MOVIE_SUCCESS,
             reply_markup=get_back_to_admin_keyboard(),
         )
         logger.info("movie_edited", code=code, field="title", new_value=new_title)
-    
+
     await state.clear()
 
 
@@ -387,30 +395,28 @@ async def handle_new_code(
     if not message.text.isdigit():
         await message.answer("❌ Faqat raqam kiriting!")
         return
-    
+
     new_code = int(message.text)
     data = await state.get_data()
     old_code = data["code"]
-    
+
     # Check if new code exists
     existing = await uow.movies.get_by_code(new_code)
     if existing:
-        await message.answer(
-            messages.ADD_MOVIE_CODE_EXISTS.format(title=existing.title)
-        )
+        await message.answer(messages.ADD_MOVIE_CODE_EXISTS.format(title=existing.title))
         return
-    
+
     movie = await uow.movies.get_by_code(old_code)
     if movie:
         movie.code = new_code
         await uow.movies.update(movie)
-        
+
         await message.answer(
             messages.EDIT_MOVIE_SUCCESS,
             reply_markup=get_back_to_admin_keyboard(),
         )
         logger.info("movie_edited", old_code=old_code, new_code=new_code)
-    
+
     await state.clear()
 
 
@@ -438,18 +444,18 @@ async def handle_new_video(
     new_file_id = message.video.file_id
     data = await state.get_data()
     code = data["code"]
-    
+
     movie = await uow.movies.get_by_code(code)
     if movie:
         movie.file_id = new_file_id
         await uow.movies.update(movie)
-        
+
         await message.answer(
             messages.EDIT_MOVIE_SUCCESS,
             reply_markup=get_back_to_admin_keyboard(),
         )
         logger.info("movie_edited", code=code, field="video")
-    
+
     await state.clear()
 
 
@@ -457,4 +463,3 @@ async def handle_new_video(
 async def handle_new_video_invalid(message: Message) -> None:
     """Handle invalid video upload."""
     await message.answer("❌ Iltimos, video yuboring!")
-

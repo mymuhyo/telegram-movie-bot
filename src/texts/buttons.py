@@ -32,7 +32,7 @@ BTN_EDIT_CODE = "🔢 Kod"
 BTN_EDIT_VIDEO = "🎬 Video"
 BTN_ANNOUNCE = "📢 E'lon qilish"
 
-# Admin management  
+# Admin management
 BTN_ADD_ADMIN = "➕ Admin qo'shish"
 BTN_REMOVE_ADMIN = "➖ Adminni o'chirish"
 

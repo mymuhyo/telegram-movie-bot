@@ -1,9 +1,10 @@
 """Search handlers."""
-from aiogram import F, Router
+
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import Message
 
 from src.bot.keyboards import get_cancel_keyboard, get_search_results_keyboard
 from src.core import get_logger
@@ -18,6 +19,7 @@ router = Router(name="search")
 
 class SearchStates(StatesGroup):
     """Search FSM states."""
+
     waiting_query = State()
 
 
@@ -84,10 +86,9 @@ async def process_search(
         return
 
     # Format results
-    results_text = "\n".join([
-        f"{i+1}. 🎬 {m.title} (kod: {m.code})"
-        for i, m in enumerate(results)
-    ])
+    results_text = "\n".join(
+        [f"{i+1}. 🎬 {m.title} (kod: {m.code})" for i, m in enumerate(results)]
+    )
 
     # Create keyboard with movie buttons
     keyboard_data = [(m.code, m.title) for m in results]

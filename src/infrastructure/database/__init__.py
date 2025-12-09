@@ -1,4 +1,5 @@
 """Database package."""
+
 from src.infrastructure.database.base import Base, SoftDeleteMixin, TimestampMixin, VersionMixin
 from src.infrastructure.database.session import (
     async_session_factory,

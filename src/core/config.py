@@ -1,6 +1,6 @@
 """Core configuration module."""
+
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import Field, PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     redis_url: RedisDsn = Field(default="redis://localhost:6379/0")
 
     # Backup
-    backup_channel_id: Optional[int] = None
+    backup_channel_id: int | None = None
     backup_interval_hours: int = 24
 
     @field_validator("backup_channel_id", mode="before")

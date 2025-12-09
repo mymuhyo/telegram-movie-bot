@@ -1,4 +1,5 @@
 """Keyboards package."""
+
 from src.bot.keyboards.admin import (
     get_admin_panel_keyboard,
     get_back_to_admin_keyboard,

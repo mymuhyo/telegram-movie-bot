@@ -1,9 +1,10 @@
 """Movie request database model."""
+
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -37,25 +38,25 @@ class MovieRequestModel(Base, TimestampMixin):
 
     # Request content
     movie_title: Mapped[str] = mapped_column(String(500), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Status
     status: Mapped[str] = mapped_column(String(20), default=STATUS_PENDING, index=True)
-    admin_response: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    admin_response: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Processing
-    processed_by: Mapped[Optional[UUID]] = mapped_column(
+    processed_by: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("admins.id", ondelete="SET NULL"),
         nullable=True,
     )
-    processed_at: Mapped[Optional[datetime]] = mapped_column(
+    processed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
 
     # Fulfilled movie
-    fulfilled_movie_id: Mapped[Optional[UUID]] = mapped_column(
+    fulfilled_movie_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("movies.id", ondelete="SET NULL"),
         nullable=True,

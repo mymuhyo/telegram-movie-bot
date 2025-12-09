@@ -1,7 +1,9 @@
 """Unit of Work pattern implementation."""
+
 from types import TracebackType
 from typing import Self
 
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.infrastructure.database.repositories import (
@@ -13,8 +15,6 @@ from src.infrastructure.database.repositories import (
     UserRepository,
 )
 
-
-from redis.asyncio import Redis
 
 class UnitOfWork:
     """Unit of Work for managing database transactions."""

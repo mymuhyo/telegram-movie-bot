@@ -1,12 +1,11 @@
 """Bot loader - creates bot and dispatcher instances."""
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.redis import RedisStorage
-from redis.asyncio import Redis
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from src.core.config import settings
-
 
 # Create bot instance
 bot = Bot(
@@ -34,7 +33,6 @@ bot = Bot(
 #     redis = None
 #     storage = MemoryStorage()
 
-from aiogram.fsm.storage.memory import MemoryStorage
 redis = None
 storage = MemoryStorage()
 

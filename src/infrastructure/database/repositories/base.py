@@ -1,5 +1,7 @@
 """Base repository with common CRUD operations."""
-from typing import Any, Generic, Sequence, Type, TypeVar
+
+from collections.abc import Sequence
+from typing import Generic, TypeVar
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -14,7 +16,7 @@ T = TypeVar("T", bound=Base)
 class BaseRepository(Generic[T]):
     """Base repository with common CRUD operations."""
 
-    model: Type[T]
+    model: type[T]
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session

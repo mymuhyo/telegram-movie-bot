@@ -1,4 +1,5 @@
 """Database models package."""
+
 from src.infrastructure.database.models.admin import AdminModel
 from src.infrastructure.database.models.admin_log import AdminLogModel
 from src.infrastructure.database.models.broadcast import BroadcastModel

@@ -1,6 +1,6 @@
 """Broadcast database model."""
+
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, Text, func
@@ -36,7 +36,7 @@ class BroadcastModel(Base, VersionMixin):
 
     content_type: Mapped[str] = mapped_column(String(20), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    file_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Progress
     total_users: Mapped[int] = mapped_column(Integer, default=0)
@@ -46,7 +46,7 @@ class BroadcastModel(Base, VersionMixin):
     status: Mapped[str] = mapped_column(String(20), default=BROADCAST_PENDING)
 
     # Error tracking
-    last_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Ownership
@@ -62,11 +62,11 @@ class BroadcastModel(Base, VersionMixin):
         server_default=func.now(),
         nullable=False,
     )
-    started_at: Mapped[Optional[datetime]] = mapped_column(
+    started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
+    completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )

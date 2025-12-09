@@ -1,4 +1,5 @@
 """Movie database model."""
+
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
@@ -19,9 +20,7 @@ class MovieModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
     __tablename__ = "movies"
     __table_args__ = (
         CheckConstraint("year IS NULL OR (year >= 1900 AND year <= 2100)", name="valid_year"),
-        CheckConstraint(
-            "duration_minutes IS NULL OR duration_minutes > 0", name="valid_duration"
-        ),
+        CheckConstraint("duration_minutes IS NULL OR duration_minutes > 0", name="valid_duration"),
     )
 
     # Core fields
@@ -35,18 +34,18 @@ class MovieModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
     file_id: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Series relation
-    series_id: Mapped[Optional[UUID]] = mapped_column(
+    series_id: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("series.id", ondelete="SET NULL"),
         nullable=True,
     )
-    part_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    part_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Metadata
     quality: Mapped[str] = mapped_column(String(20), default="HD")
-    year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    duration_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Tracking
     added_by: Mapped[int] = mapped_column(BigInteger, nullable=False)

@@ -1,12 +1,13 @@
 """Throttling middleware for rate limiting."""
+
 from collections import defaultdict
-from datetime import datetime, timedelta, UTC
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message
 
-from src.core import RateLimitError
 from src.core.config import settings
 from src.texts import messages
 
@@ -38,9 +39,7 @@ class ThrottlingMiddleware(BaseMiddleware):
 
         # Clean old requests
         self._user_requests[user_id] = [
-            req_time
-            for req_time in self._user_requests[user_id]
-            if req_time > window_start
+            req_time for req_time in self._user_requests[user_id] if req_time > window_start
         ]
 
         # Check rate limit (skip for admins)
@@ -48,11 +47,11 @@ class ThrottlingMiddleware(BaseMiddleware):
         if not is_admin and len(self._user_requests[user_id]) >= self._rate_limit:
             # Calculate remaining time
             oldest = min(self._user_requests[user_id])
-            seconds_remaining = int((oldest + timedelta(seconds=self._rate_window) - now).total_seconds())
-            
-            await event.answer(
-                messages.THROTTLED.format(seconds=max(1, seconds_remaining))
+            seconds_remaining = int(
+                (oldest + timedelta(seconds=self._rate_window) - now).total_seconds()
             )
+
+            await event.answer(messages.THROTTLED.format(seconds=max(1, seconds_remaining)))
             return None
 
         # Record this request

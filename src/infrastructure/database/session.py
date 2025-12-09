@@ -1,4 +1,5 @@
 """Database session and engine configuration."""
+
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (

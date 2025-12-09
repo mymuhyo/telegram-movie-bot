@@ -1,11 +1,17 @@
 """Broadcast handlers with progress tracking."""
+
 import asyncio
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
-from src.bot.keyboards import get_back_to_admin_keyboard, get_broadcast_keyboard, get_broadcast_confirm_keyboard
+from src.bot.keyboards import (
+    get_back_to_admin_keyboard,
+    get_broadcast_confirm_keyboard,
+    get_broadcast_keyboard,
+)
 from src.bot.loader import bot
 from src.core import get_logger
 from src.core.config import settings
@@ -19,6 +25,7 @@ router = Router(name="broadcast")
 
 class BroadcastStates(StatesGroup):
     """States for broadcasting."""
+
     waiting_content = State()
     confirm = State()
     sending = State()
@@ -156,8 +163,9 @@ async def callback_broadcast_send(
                 await progress_msg.edit_text(
                     _format_progress(sent, failed, total, percent),
                 )
-            except:
-                pass  # Ignore edit errors
+            except Exception as e:
+                # Silently ignore Telegram API edit errors (message not modified, etc.)
+                logger.debug("broadcast_progress_update_failed", error=str(e))
 
         # Rate limiting delay
         await asyncio.sleep(delay_ms / 1000)
@@ -177,7 +185,7 @@ def _format_progress(sent: int, failed: int, total: int, percent: int) -> str:
     bar_length = 10
     filled = int(bar_length * percent / 100)
     bar = "█" * filled + "░" * (bar_length - filled)
-    
+
     remaining = total - sent - failed
     # Rough estimate: ~50ms per message
     eta_seconds = remaining * 0.05

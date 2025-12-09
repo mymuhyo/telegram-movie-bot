@@ -1,6 +1,7 @@
 """User repository implementation."""
-from datetime import datetime, timedelta, UTC
-from typing import Sequence
+
+from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -58,11 +59,7 @@ class UserRepository(SoftDeleteRepository[UserModel]):
 
     async def update_activity(self, user_id: UUID) -> None:
         """Update user's last active timestamp."""
-        stmt = (
-            update(UserModel)
-            .where(UserModel.id == user_id)
-            .values(last_active_at=func.now())
-        )
+        stmt = update(UserModel).where(UserModel.id == user_id).values(last_active_at=func.now())
         await self._session.execute(stmt)
 
     async def increment_downloads(self, user_id: UUID) -> None:
@@ -121,11 +118,7 @@ class UserRepository(SoftDeleteRepository[UserModel]):
 
     async def get_total_count(self) -> int:
         """Get total users count."""
-        query = (
-            select(func.count())
-            .select_from(UserModel)
-            .where(UserModel.deleted_at.is_(None))
-        )
+        query = select(func.count()).select_from(UserModel).where(UserModel.deleted_at.is_(None))
         result = await self._session.execute(query)
         return result.scalar() or 0
 

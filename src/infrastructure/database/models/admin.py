@@ -1,6 +1,7 @@
 """Admin database model."""
+
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -30,13 +31,13 @@ class AdminModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
         nullable=False,
         index=True,
     )
-    username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Role
     role: Mapped[str] = mapped_column(String(20), nullable=False)
 
     # Activity
-    last_action_at: Mapped[Optional[datetime]] = mapped_column(
+    last_action_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )

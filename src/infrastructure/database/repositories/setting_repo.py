@@ -1,4 +1,5 @@
 """Setting repository implementation."""
+
 from typing import Any
 
 from sqlalchemy import select
@@ -48,6 +49,7 @@ class SettingRepository:
             value_type = "integer"
         elif isinstance(value, dict):
             import json
+
             str_value = json.dumps(value)
             value_type = "json"
         else:

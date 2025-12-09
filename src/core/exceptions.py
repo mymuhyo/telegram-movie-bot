@@ -1,5 +1,4 @@
 """Custom exceptions for the application."""
-from typing import Optional
 
 
 class BotException(Exception):
@@ -8,7 +7,7 @@ class BotException(Exception):
     def __init__(
         self,
         message: str,
-        user_message: Optional[str] = None,
+        user_message: str | None = None,
     ) -> None:
         self.message = message
         self.user_message = user_message or message
@@ -18,6 +17,7 @@ class BotException(Exception):
 # Domain exceptions
 class EntityNotFoundError(BotException):
     """Raised when an entity is not found in the database."""
+
     pass
 
 
@@ -34,24 +34,27 @@ class MovieNotFoundError(EntityNotFoundError):
 
 class UserNotFoundError(EntityNotFoundError):
     """Raised when a user is not found."""
+
     pass
 
 
 class SeriesNotFoundError(EntityNotFoundError):
     """Raised when a series is not found."""
+
     pass
 
 
 # Access exceptions
 class AccessDeniedError(BotException):
     """Raised when access is denied."""
+
     pass
 
 
 class UserBannedError(AccessDeniedError):
     """Raised when a banned user tries to access the bot."""
 
-    def __init__(self, reason: Optional[str] = None) -> None:
+    def __init__(self, reason: str | None = None) -> None:
         self.reason = reason
         super().__init__(
             message=f"User is banned: {reason}",
@@ -82,6 +85,7 @@ class NotSuperAdminError(AccessDeniedError):
 # Validation exceptions
 class ValidationError(BotException):
     """Raised when validation fails."""
+
     pass
 
 

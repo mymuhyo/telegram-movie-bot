@@ -1,4 +1,5 @@
 """User keyboards."""
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.texts import buttons
@@ -32,20 +33,24 @@ def get_search_results_keyboard(
     for code, title in results:
         # Truncate title if too long
         display_title = title[:30] + "..." if len(title) > 30 else title
-        keyboard.append([
-            InlineKeyboardButton(
-                text=f"📥 {code} — {display_title}",
-                callback_data=f"movie:{code}",
-            )
-        ])
-    
-    keyboard.append([
-        InlineKeyboardButton(
-            text=buttons.BTN_CANCEL,
-            callback_data="cancel",
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=f"📥 {code} — {display_title}",
+                    callback_data=f"movie:{code}",
+                )
+            ]
         )
-    ])
-    
+
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                text=buttons.BTN_CANCEL,
+                callback_data="cancel",
+            )
+        ]
+    )
+
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 

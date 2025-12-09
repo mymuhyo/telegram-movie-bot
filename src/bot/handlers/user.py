@@ -1,10 +1,11 @@
 """User handlers for /start, /help, and movie codes."""
+
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.types import CallbackQuery, Message
 
 from src.bot.keyboards import get_movie_card_keyboard, get_subscription_keyboard
-from src.core import MovieNotFoundError, get_logger
+from src.core import get_logger
 from src.infrastructure import UnitOfWork
 from src.infrastructure.database.models.user import UserModel
 from src.texts import messages
@@ -16,12 +17,12 @@ router = Router(name="user")
 
 async def check_user_subscription(bot: Bot, user_id: int, channel: str) -> bool:
     """Check if user is subscribed to channel.
-    
+
     Args:
         bot: Telegram bot instance
         user_id: User's Telegram ID
         channel: Channel username (with @)
-        
+
     Returns:
         True if subscribed or on error (don't block users on API issues)
     """
@@ -45,6 +46,7 @@ async def cmd_start(
     # Check if user is banned
     if user.is_banned:
         from src.core.config import settings
+
         await message.answer(messages.USER_BANNED.format(admin=settings.admin_username))
         return
 
@@ -72,9 +74,7 @@ async def cmd_start(
     channel = await uow.settings.get_required_channel() or "@YourChannel"
 
     # Send welcome message
-    await message.answer(
-        messages.WELCOME.format(channel=channel)
-    )
+    await message.answer(messages.WELCOME.format(channel=channel))
 
     if user_created:
         logger.info("new_user_joined", user_id=user.telegram_id)
@@ -85,7 +85,7 @@ async def cmd_help(message: Message, uow: UnitOfWork) -> None:
     """Handle /help command."""
     channel = await uow.settings.get_required_channel() or "@YourChannel"
     from src.core.config import settings
-    
+
     await message.answer(
         messages.HELP.format(
             channel=channel,
@@ -105,6 +105,7 @@ async def handle_movie_code(
     # Check if user is banned
     if user.is_banned:
         from src.core.config import settings
+
         await message.answer(messages.USER_BANNED.format(admin=settings.admin_username))
         return
 
@@ -129,21 +130,19 @@ async def handle_movie_code(
                 return
 
     code = int(message.text)
-    
+
     # Get movie by code
     movie = await uow.movies.get_by_code(code)
-    
+
     if not movie:
         # Get popular movies for suggestions
         popular = await uow.movies.get_popular(limit=3)
-        suggestions = "\n".join([
-            f"├── {m.code} — {m.title}" for m in popular[:-1]
-        ])
+        suggestions = "\n".join([f"├── {m.code} — {m.title}" for m in popular[:-1]])
         if popular:
             suggestions += f"\n└── {popular[-1].code} — {popular[-1].title}"
-        
+
         channel = await uow.settings.get_required_channel() or "@YourChannel"
-        
+
         await message.answer(
             messages.MOVIE_NOT_FOUND.format(
                 code=code,
@@ -161,7 +160,9 @@ async def handle_movie_code(
             year=movie.year,
             duration=movie.duration_minutes,
             downloads=movie.download_count,
-            description=movie.description[:200] + "..." if len(movie.description) > 200 else movie.description,
+            description=movie.description[:200] + "..."
+            if len(movie.description) > 200
+            else movie.description,
         )
     elif movie.year and movie.duration_minutes:
         card = messages.MOVIE_CARD_ENHANCED.format(
@@ -185,14 +186,17 @@ async def handle_movie_code(
         for sm in series_movies:
             marker = "(bu)" if sm.id == movie.id else "✅"
             parts_list.append(f"├── {sm.part_number}-qism: kod {sm.code} {marker}")
-        
+
         if parts_list:
             parts_list[-1] = parts_list[-1].replace("├──", "└──")
             series_info = messages.SERIES_INFO.format(
                 series_name=movie.series.name,
                 parts_list="\n".join(parts_list),
             )
-            card = f"🎬 {movie.series.name}\n\n📺 {movie.part_number}-qism: {movie.title}\n\n" + card.split("\n\n", 1)[1]
+            card = (
+                f"🎬 {movie.series.name}\n\n📺 {movie.part_number}-qism: {movie.title}\n\n"
+                + card.split("\n\n", 1)[1]
+            )
             card += f"\n\n{series_info}"
 
     # Send movie card with share button
@@ -232,21 +236,19 @@ async def callback_check_subscription(
 ) -> None:
     """Handle subscription check callback."""
     channel = await uow.settings.get_required_channel()
-    
+
     if not channel:
         await callback.answer(messages.SUBSCRIBE_SUCCESS, show_alert=True)
         await callback.message.delete()
         return
-    
+
     is_subscribed = await check_user_subscription(bot, callback.from_user.id, channel)
-    
+
     if is_subscribed:
         await callback.answer(messages.SUBSCRIBE_SUCCESS, show_alert=True)
         await callback.message.delete()
         # Show welcome message after successful subscription
-        await callback.message.answer(
-            messages.WELCOME.format(channel=channel)
-        )
+        await callback.message.answer(messages.WELCOME.format(channel=channel))
     else:
         await callback.answer(messages.SUBSCRIBE_FAIL, show_alert=True)
 
@@ -259,7 +261,7 @@ async def callback_movie_code(
 ) -> None:
     """Handle movie code callback from search results."""
     code = int(callback.data.split(":")[1])
-    
+
     # Get movie
     movie = await uow.movies.get_by_code(code)
     if not movie:
@@ -274,7 +276,9 @@ async def callback_movie_code(
             year=movie.year,
             duration=movie.duration_minutes,
             downloads=movie.download_count,
-            description=movie.description[:200] + "..." if len(movie.description) > 200 else movie.description,
+            description=movie.description[:200] + "..."
+            if len(movie.description) > 200
+            else movie.description,
         )
     elif movie.year and movie.duration_minutes:
         card = messages.MOVIE_CARD_ENHANCED.format(
@@ -290,7 +294,7 @@ async def callback_movie_code(
             code=movie.code,
             downloads=movie.download_count,
         )
-    
+
     # Send movie card with share button
     await callback.message.answer(
         card,
@@ -330,12 +334,12 @@ async def handle_text_fallback(
 ) -> None:
     """Handle arbitrary text inputs (Smart Fallback)."""
     text = message.text.lower().strip()
-    
+
     # Common greetings
     if text in ("salom", "assalomu alaykum", "start", "/start"):
-         channel = await uow.settings.get_required_channel() or "@YourChannel"
-         await message.answer(messages.WELCOME.format(channel=channel))
-         return
+        channel = await uow.settings.get_required_channel() or "@YourChannel"
+        await message.answer(messages.WELCOME.format(channel=channel))
+        return
 
     # If it looks like a search query (not just numbers, handled by other handler)
     if len(text) > 2:

@@ -1,10 +1,16 @@
 """Backup handlers."""
+
 import io
 from datetime import datetime
-from aiogram import F, Router
-from aiogram.types import CallbackQuery, BufferedInputFile, InlineKeyboardMarkup, InlineKeyboardButton
 
-from src.bot.keyboards import get_back_to_admin_keyboard
+from aiogram import F, Router
+from aiogram.types import (
+    BufferedInputFile,
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
+
 from src.bot.loader import bot
 from src.core import get_logger
 from src.core.config import settings
@@ -60,11 +66,11 @@ async def callback_backup_json(
 ) -> None:
     """Create JSON backup."""
     import json
-    
+
     # Gather all data
     movies = await uow.movies.get_all(limit=10000)
     users = await uow.users.get_all(limit=100000)
-    
+
     backup_data = {
         "created_at": datetime.now().isoformat(),
         "movies": [
@@ -79,14 +85,14 @@ async def callback_backup_json(
         "users_count": len(users),
         "movies_count": len(movies),
     }
-    
+
     json_content = json.dumps(backup_data, ensure_ascii=False, indent=2)
-    
+
     file = BufferedInputFile(
-        file=json_content.encode('utf-8'),
+        file=json_content.encode("utf-8"),
         filename=f"backup_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
     )
-    
+
     await callback.message.answer_document(
         document=file,
         caption=f"📥 Zaxira nusxasi\n\n🎬 Kinolar: {len(movies)}\n👤 Foydalanuvchilar: {len(users)}",
@@ -102,30 +108,30 @@ async def callback_backup_excel(
 ) -> None:
     """Create Excel backup."""
     from openpyxl import Workbook
-    
+
     movies = await uow.movies.get_all(limit=10000)
-    
+
     wb = Workbook()
     ws = wb.active
     ws.title = "Kinolar"
-    
+
     # Headers
     ws.append(["Kod", "Nomi", "Yuklanishlar", "File ID"])
-    
+
     # Data
     for movie in movies:
         ws.append([movie.code, movie.title, movie.download_count, movie.file_id])
-    
+
     # Save to bytes
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
-    
+
     file = BufferedInputFile(
         file=output.getvalue(),
         filename=f"movies_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
     )
-    
+
     await callback.message.answer_document(
         document=file,
         caption=f"📊 Excel export\n\n🎬 Jami: {len(movies)} ta kino",
@@ -143,12 +149,12 @@ async def callback_backup_channel(
     if not settings.backup_channel_id:
         await callback.answer("❌ Backup kanal sozlanmagan!", show_alert=True)
         return
-    
+
     import json
-    
+
     movies = await uow.movies.get_all(limit=10000)
     users_count = await uow.users.get_total_count()
-    
+
     backup_data = {
         "created_at": datetime.now().isoformat(),
         "movies": [
@@ -161,14 +167,14 @@ async def callback_backup_channel(
             for m in movies
         ],
     }
-    
+
     json_content = json.dumps(backup_data, ensure_ascii=False, indent=2)
-    
+
     file = BufferedInputFile(
-        file=json_content.encode('utf-8'),
+        file=json_content.encode("utf-8"),
         filename=f"backup_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
     )
-    
+
     try:
         await bot.send_document(
             chat_id=settings.backup_channel_id,

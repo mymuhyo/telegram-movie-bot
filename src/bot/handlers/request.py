@@ -1,5 +1,6 @@
 """User request handlers."""
-from aiogram import F, Router
+
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -18,6 +19,7 @@ router = Router(name="request")
 
 class RequestStates(StatesGroup):
     """States for movie request."""
+
     waiting_title = State()
 
 
@@ -31,6 +33,7 @@ async def cmd_request(
     # Check if user is banned
     if user.is_banned:
         from src.core.config import settings
+
         await message.answer(messages.USER_BANNED.format(admin=settings.admin_username))
         return
 
@@ -50,23 +53,23 @@ async def handle_request_title(
     if len(title) < 2:
         await message.answer("❌ Nom juda qisqa!")
         return
-    
+
     # Create request
     request = MovieRequestModel(
         user_id=user.id,
         movie_title=title,
     )
     await uow.requests.create(request)
-    await uow.commit() # Commit explicitly if needed, or rely on UOW context if applicable (but here we are in handler)
-    # Wait, usually repository create methods don't commit? 
-    # Let's check BaseRepository.create. It usually just adds to session. 
-    # The middleware usually handles commit if no exception. 
-    # But for safety we might want to check. 
+    await uow.commit()  # Commit explicitly if needed, or rely on UOW context if applicable (but here we are in handler)
+    # Wait, usually repository create methods don't commit?
+    # Let's check BaseRepository.create. It usually just adds to session.
+    # The middleware usually handles commit if no exception.
+    # But for safety we might want to check.
     # Assuming middleware handles commit for successful handlers.
-    
+
     await message.answer(messages.REQUEST_SUBMITTED)
     await state.clear()
-    
+
     logger.info("movie_requested", user_id=user.telegram_id, title=title)
 
 
@@ -80,11 +83,13 @@ async def cmd_myrequest(
     # Check if user is banned
     if user.is_banned:
         from src.core.config import settings
+
         await message.answer(messages.USER_BANNED.format(admin=settings.admin_username))
         return
 
     # specific query for user requests
     from sqlalchemy import select
+
     query = (
         select(MovieRequestModel)
         .where(MovieRequestModel.user_id == user.id)
@@ -93,11 +98,11 @@ async def cmd_myrequest(
     )
     result = await uow._session.execute(query)
     requests = result.scalars().all()
-    
+
     if not requests:
         await message.answer(messages.REQUEST_EMPTY)
         return
-    
+
     text = ""
     for req in requests:
         status_icon = {
@@ -106,14 +111,14 @@ async def cmd_myrequest(
             "rejected": "❌",
             "added": "✅",
         }.get(req.status, "❓")
-        
+
         status_text = {
             "pending": "Kutilmoqda",
             "approved": "Qabul qilindi",
             "rejected": "Rad etildi",
             "added": "Qo'shildi",
         }.get(req.status, req.status)
-        
+
         text += f"{status_icon} {req.movie_title} — {status_text}\n"
-    
+
     await message.answer(messages.REQUEST_LIST.format(requests=text))

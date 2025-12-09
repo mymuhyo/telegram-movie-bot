@@ -1,7 +1,7 @@
 """Tests for core configuration and utilities."""
-import pytest
+
 from src.core.config import Settings
-from src.core.exceptions import MovieNotFoundError, UserBannedError, NotAdminError
+from src.core.exceptions import MovieNotFoundError, NotAdminError, UserBannedError
 
 
 class TestSettings:
@@ -13,9 +13,9 @@ class TestSettings:
         monkeypatch.setenv("PRIVATE_CHANNEL_ID", "-1001234567890")
         monkeypatch.setenv("SUPER_ADMIN_ID", "123456789")
         monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://user:pass@localhost/db")
-        
+
         settings = Settings()
-        
+
         assert settings.bot_token == "test:token"
         assert settings.private_channel_id == -1001234567890
         assert settings.super_admin_id == 123456789
@@ -26,9 +26,9 @@ class TestSettings:
         monkeypatch.setenv("PRIVATE_CHANNEL_ID", "-1001234567890")
         monkeypatch.setenv("SUPER_ADMIN_ID", "123456789")
         monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://user:pass@localhost/db")
-        
+
         settings = Settings()
-        
+
         assert settings.debug is False
         assert settings.environment in ("development", "production")
         assert settings.backup_interval_hours == 24

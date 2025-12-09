@@ -1,4 +1,5 @@
 """Repositories package."""
+
 from src.infrastructure.database.repositories.admin_repo import AdminRepository
 from src.infrastructure.database.repositories.base import BaseRepository, SoftDeleteRepository
 from src.infrastructure.database.repositories.download_repo import DownloadRepository

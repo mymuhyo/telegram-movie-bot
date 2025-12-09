@@ -1,6 +1,7 @@
 """Movie repository implementation."""
+
 import json
-from typing import Sequence, Any
+from collections.abc import Sequence
 from uuid import UUID
 
 from rapidfuzz import fuzz
@@ -9,8 +10,11 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 
+from src.core import get_logger
 from src.infrastructure.database.models.movie import MovieModel
 from src.infrastructure.database.repositories.base import SoftDeleteRepository
+
+logger = get_logger(__name__)
 
 
 class MovieRepository(SoftDeleteRepository[MovieModel]):
@@ -36,8 +40,8 @@ class MovieRepository(SoftDeleteRepository[MovieModel]):
                     if data.get("series_id"):
                         data["series_id"] = UUID(data["series_id"])
                     return MovieModel(**data)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("movie_cache_deserialize_failed", code=code, error=str(e))
 
         # DB fallback
         query = (
@@ -69,10 +73,10 @@ class MovieRepository(SoftDeleteRepository[MovieModel]):
                 await self._redis.setex(
                     f"movie:code:{movie.code}",
                     3600,  # 1 hour
-                    json.dumps(data)
+                    json.dumps(data),
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("movie_cache_write_failed", code=movie.code, error=str(e))
 
         return movie
 
@@ -81,7 +85,7 @@ class MovieRepository(SoftDeleteRepository[MovieModel]):
         # Clear cache before/after update
         if self._redis:
             await self._redis.delete(f"movie:code:{instance.code}")
-        
+
         await self._session.merge(instance)
         # Flush to ensure DB update
         await self._session.flush()
@@ -89,12 +93,12 @@ class MovieRepository(SoftDeleteRepository[MovieModel]):
 
     async def soft_delete(self, id: UUID) -> bool:
         """Soft delete and clear cache."""
-        # Need to fetch code to clear cache... optimal? 
+        # Need to fetch code to clear cache... optimal?
         # Or just let it expire? Better to fetch.
-        movie = await self.get(id)
+        movie = await self.get_by_id(id)
         if movie and self._redis:
             await self._redis.delete(f"movie:code:{movie.code}")
-            
+
         return await super().soft_delete(id)
 
     async def code_exists(self, code: int, exclude_id: UUID | None = None) -> bool:

@@ -1,4 +1,5 @@
 """Middlewares package."""
+
 from src.bot.middlewares.database import DatabaseMiddleware
 from src.bot.middlewares.logging import LoggingMiddleware
 from src.bot.middlewares.throttling import ThrottlingMiddleware

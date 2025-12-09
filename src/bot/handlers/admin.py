@@ -1,4 +1,5 @@
 """Admin panel handlers."""
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
@@ -186,10 +187,7 @@ async def callback_movies_list(
         await callback.answer()
         return
 
-    movies_text = "\n".join([
-        f"{i+1}. {m.title} — kod: {m.code}"
-        for i, m in enumerate(movies)
-    ])
+    movies_text = "\n".join([f"{i+1}. {m.title} — kod: {m.code}" for i, m in enumerate(movies)])
 
     await callback.message.edit_text(
         messages.MOVIE_LIST.format(
@@ -199,4 +197,3 @@ async def callback_movies_list(
         reply_markup=get_back_to_admin_keyboard(),
     )
     await callback.answer()
-

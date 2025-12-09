@@ -1,4 +1,5 @@
 """Structured logging configuration."""
+
 import logging
 import sys
 from typing import Any
@@ -11,10 +12,10 @@ from src.core.config import settings
 
 def setup_logging() -> None:
     """Configure structured logging for the application."""
-    
+
     # Determine log level based on environment
     log_level = logging.DEBUG if settings.debug else logging.INFO
-    
+
     # Common processors
     shared_processors: list[Processor] = [
         structlog.contextvars.merge_contextvars,
@@ -22,7 +23,7 @@ def setup_logging() -> None:
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.StackInfoRenderer(),
     ]
-    
+
     if settings.debug:
         # Development: colored console output
         processors: list[Processor] = [
@@ -36,7 +37,7 @@ def setup_logging() -> None:
             structlog.processors.format_exc_info,
             structlog.processors.JSONRenderer(),
         ]
-    
+
     structlog.configure(
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
@@ -44,14 +45,14 @@ def setup_logging() -> None:
         logger_factory=structlog.PrintLoggerFactory(),
         cache_logger_on_first_use=True,
     )
-    
+
     # Configure standard library logging
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
         level=log_level,
     )
-    
+
     # Silence noisy libraries
     logging.getLogger("aiogram").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)

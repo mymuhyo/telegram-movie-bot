@@ -1,5 +1,7 @@
 """Logging middleware for request tracking."""
-from typing import Any, Awaitable, Callable
+
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
@@ -25,7 +27,7 @@ class LoggingMiddleware(BaseMiddleware):
                 user = event.message.from_user
             elif event.callback_query:
                 user = event.callback_query.from_user
-            
+
             if user:
                 log_context(
                     user_id=user.id,
@@ -36,5 +38,5 @@ class LoggingMiddleware(BaseMiddleware):
                     update_id=event.update_id,
                     update_type=event.event_type,
                 )
-        
+
         return await handler(event, data)

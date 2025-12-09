@@ -1,5 +1,4 @@
 """Handlers package."""
-from aiogram import Router
 
 from src.bot.handlers.admin import router as admin_router
 from src.bot.handlers.admin_movies import router as admin_movies_router

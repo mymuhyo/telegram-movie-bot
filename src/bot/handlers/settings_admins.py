@@ -1,13 +1,13 @@
 """Settings and Admin user management handlers."""
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.keyboards import get_back_to_admin_keyboard
 from src.core import get_logger
 from src.infrastructure import UnitOfWork
-from src.texts import messages
 
 logger = get_logger(__name__)
 
@@ -16,8 +16,10 @@ router = Router(name="settings_admins")
 
 # ========== SETTINGS ==========
 
+
 class SettingsStates(StatesGroup):
     """States for settings."""
+
     waiting_channel = State()
     waiting_maintenance_message = State()
 
@@ -26,7 +28,7 @@ def get_settings_keyboard(channel_check: bool, maintenance: bool) -> InlineKeybo
     """Get settings keyboard."""
     channel_icon = "✅" if channel_check else "❌"
     maint_icon = "✅" if maintenance else "❌"
-    
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -75,7 +77,7 @@ async def callback_settings_menu(
     maintenance = await uow.settings.is_maintenance_mode()
     channel = await uow.settings.get_required_channel()
     maint_msg = await uow.settings.get_maintenance_message()
-    
+
     text = (
         "⚙️ Bot sozlamalari\n\n"
         f"📢 Kanal tekshiruvi: {'✅' if channel_check else '❌'}\n"
@@ -132,15 +134,15 @@ async def handle_channel_input(
 ) -> None:
     """Handle channel input."""
     channel = message.text.strip()
-    
+
     if not channel.startswith("@"):
         await message.answer("❌ Kanal @ bilan boshlanishi kerak!")
         return
-    
+
     await uow.settings.set("required_channel", channel)
     await uow.commit()
     await state.clear()
-    
+
     await message.answer(
         f"✅ Majburiy kanal o'rnatildi: {channel}",
         reply_markup=get_back_to_admin_keyboard(),
@@ -189,21 +191,23 @@ async def handle_maint_message_input(
 ) -> None:
     """Handle maintenance message input."""
     msg = message.text.strip()
-    
+
     await uow.settings.set("maintenance_message", msg)
     await uow.commit()
     await state.clear()
-    
+
     await message.answer(
-        f"✅ Texnik ishlar xabari o'rnatildi!",
+        "✅ Texnik ishlar xabari o'rnatildi!",
         reply_markup=get_back_to_admin_keyboard(),
     )
 
 
 # ========== ADMIN MANAGEMENT ==========
 
+
 class AdminStates(StatesGroup):
     """States for admin management."""
+
     waiting_telegram_id = State()
     waiting_username = State()
 
@@ -252,7 +256,7 @@ async def callback_admins_list(
 ) -> None:
     """Show list of admins."""
     admins = await uow.admins.get_all_admins()
-    
+
     if not admins:
         await callback.message.edit_text(
             "👤 Adminlar ro'yxati\n\nAdminlar yo'q!",
@@ -260,12 +264,12 @@ async def callback_admins_list(
         )
         await callback.answer()
         return
-    
+
     text = "👤 Adminlar ro'yxati\n\n"
     for i, admin in enumerate(admins, 1):
         role = "👑 Super" if admin.is_super else "🔧 Admin"
         text += f"{i}. {role} @{admin.username or 'noname'} ({admin.telegram_id})\n"
-    
+
     await callback.message.edit_text(
         text,
         reply_markup=get_admins_keyboard(),
@@ -302,15 +306,15 @@ async def handle_admin_id(
     if not message.text.isdigit():
         await message.answer("❌ Faqat raqam kiriting!")
         return
-    
+
     telegram_id = int(message.text)
-    
+
     # Check if already admin
     existing = await uow.admins.get_by_telegram_id(telegram_id)
     if existing:
         await message.answer("❌ Bu foydalanuvchi allaqachon admin!")
         return
-    
+
     await state.update_data(telegram_id=telegram_id)
     await message.answer(
         "📝 Username kiriting (@ siz):",
@@ -328,7 +332,7 @@ async def handle_admin_username(
     """Handle admin username input and create admin."""
     username = message.text.strip().replace("@", "")
     data = await state.get_data()
-    
+
     await uow.admins.create_admin(
         telegram_id=data["telegram_id"],
         username=username,
@@ -336,7 +340,7 @@ async def handle_admin_username(
     )
     await uow.commit()
     await state.clear()
-    
+
     await message.answer(
         f"✅ Admin qo'shildi!\n\n👤 @{username}\n🆔 {data['telegram_id']}",
         reply_markup=get_admins_keyboard(),
@@ -357,7 +361,7 @@ async def callback_remove_admin(
 
     admins = await uow.admins.get_all_admins()
     admins = [a for a in admins if not a.is_super]  # Can't remove super admins
-    
+
     if not admins:
         await callback.message.edit_text(
             "❌ O'chirish uchun admin yo'q!",
@@ -365,19 +369,19 @@ async def callback_remove_admin(
         )
         await callback.answer()
         return
-    
+
     keyboard = []
     for admin in admins:
-        keyboard.append([
-            InlineKeyboardButton(
-                text=f"❌ @{admin.username or admin.telegram_id}",
-                callback_data=f"admins:delete:{admin.telegram_id}",
-            )
-        ])
-    keyboard.append([
-        InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin:admins")
-    ])
-    
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=f"❌ @{admin.username or admin.telegram_id}",
+                    callback_data=f"admins:delete:{admin.telegram_id}",
+                )
+            ]
+        )
+    keyboard.append([InlineKeyboardButton(text="🔙 Orqaga", callback_data="admin:admins")])
+
     await callback.message.edit_text(
         "➖ O'chirish uchun tanlang:",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard),
@@ -392,7 +396,7 @@ async def callback_delete_admin(
 ) -> None:
     """Delete an admin."""
     telegram_id = int(callback.data.split(":")[2])
-    
+
     admin = await uow.admins.get_by_telegram_id(telegram_id)
     if admin and not admin.is_super:
         await uow.admins.soft_delete(admin.id)
@@ -401,6 +405,6 @@ async def callback_delete_admin(
         logger.info("admin_removed", telegram_id=telegram_id)
     else:
         await callback.answer("❌ O'chirib bo'lmadi!", show_alert=True)
-    
+
     # Refresh list
     await callback_admins_menu(callback, True)

@@ -1,6 +1,7 @@
 """Download repository implementation."""
-from datetime import datetime, timedelta, UTC
-from typing import Sequence
+
+from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import select

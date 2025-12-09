@@ -1,4 +1,5 @@
 """Admin keyboards."""
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.texts import buttons
@@ -32,13 +33,15 @@ def get_admin_panel_keyboard(is_super_admin: bool = False) -> InlineKeyboardMark
             InlineKeyboardButton(text=buttons.BTN_SETTINGS, callback_data="admin:settings"),
         ],
     ]
-    
+
     # Add admin management for super admin only
     if is_super_admin:
-        keyboard.append([
-            InlineKeyboardButton(text=buttons.BTN_ADMINS, callback_data="admin:admins"),
-        ])
-    
+        keyboard.append(
+            [
+                InlineKeyboardButton(text=buttons.BTN_ADMINS, callback_data="admin:admins"),
+            ]
+        )
+
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
@@ -111,7 +114,7 @@ def get_pagination_keyboard(
 ) -> InlineKeyboardMarkup:
     """Get pagination keyboard."""
     buttons_row = []
-    
+
     if current_page > 1:
         buttons_row.append(
             InlineKeyboardButton(
@@ -119,14 +122,14 @@ def get_pagination_keyboard(
                 callback_data=f"{callback_prefix}:page:{current_page - 1}",
             )
         )
-    
+
     buttons_row.append(
         InlineKeyboardButton(
             text=f"{current_page}/{total_pages}",
             callback_data="noop",
         )
     )
-    
+
     if current_page < total_pages:
         buttons_row.append(
             InlineKeyboardButton(
@@ -134,7 +137,7 @@ def get_pagination_keyboard(
                 callback_data=f"{callback_prefix}:page:{current_page + 1}",
             )
         )
-    
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             buttons_row,
@@ -151,7 +154,7 @@ def get_pagination_keyboard(
 def get_maintenance_keyboard(is_enabled: bool) -> InlineKeyboardMarkup:
     """Get maintenance mode keyboard."""
     toggle_text = buttons.BTN_TOGGLE_OFF if is_enabled else buttons.BTN_TOGGLE_ON
-    
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [

@@ -1,6 +1,7 @@
 """User database model."""
+
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import BigInteger, Boolean, DateTime, String, Text, func
@@ -26,25 +27,19 @@ class UserModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
         nullable=False,
         index=True,
     )
-    username: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    full_name: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    full_name: Mapped[str | None] = mapped_column(String(500), nullable=True)
     language_code: Mapped[str] = mapped_column(String(10), default="uz")
 
     # Status
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
-    ban_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    banned_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    banned_by: Mapped[Optional[UUID]] = mapped_column(
-        PG_UUID(as_uuid=True), nullable=True
-    )
+    ban_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    banned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    banned_by: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
 
     # Activity
     total_downloads: Mapped[int] = mapped_column(default=0)
-    last_active_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Timestamps (from mixin, but we rename for users)
     joined_at: Mapped[datetime] = mapped_column(

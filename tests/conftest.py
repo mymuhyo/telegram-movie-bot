@@ -1,4 +1,5 @@
 """Pytest configuration and fixtures."""
+
 import asyncio
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
@@ -27,15 +28,15 @@ async def engine():  # type: ignore
         "sqlite+aiosqlite:///:memory:",
         echo=True,
     )
-    
+
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield test_engine
-    
+
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
+
     await test_engine.dispose()
 
 
@@ -47,7 +48,7 @@ async def session(engine: Any) -> AsyncGenerator[AsyncSession, None]:
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    
+
     async with async_session() as session:
         yield session
         await session.rollback()
@@ -56,7 +57,7 @@ async def session(engine: Any) -> AsyncGenerator[AsyncSession, None]:
 @pytest_asyncio.fixture(scope="function")
 async def uow(session: AsyncSession) -> AsyncGenerator[UnitOfWork, None]:
     """Create test unit of work."""
-    
+
     class TestUoW(UnitOfWork):
         def __init__(self, session: AsyncSession) -> None:
             self._session = session
@@ -68,22 +69,23 @@ async def uow(session: AsyncSession) -> AsyncGenerator[UnitOfWork, None]:
                 SettingRepository,
                 UserRepository,
             )
+
             self.movies = MovieRepository(session)
             self.users = UserRepository(session)
             self.admins = AdminRepository(session)
             self.settings = SettingRepository(session)
             self.downloads = DownloadRepository(session)
-        
+
         async def __aenter__(self):  # type: ignore
             return self
-        
+
         async def __aexit__(self, *args: Any) -> None:
             pass
-        
+
         async def commit(self) -> None:
             await self._session.commit()
-        
+
         async def rollback(self) -> None:
             await self._session.rollback()
-    
+
     yield TestUoW(session)

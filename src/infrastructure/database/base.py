@@ -1,4 +1,5 @@
 """Base model for SQLAlchemy models."""
+
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
@@ -16,9 +17,7 @@ class Base(DeclarativeBase):
         """Generate table name from class name."""
         # Convert CamelCase to snake_case
         name = cls.__name__
-        return "".join(
-            ["_" + c.lower() if c.isupper() else c for c in name]
-        ).lstrip("_") + "s"
+        return "".join(["_" + c.lower() if c.isupper() else c for c in name]).lstrip("_") + "s"
 
     # Common columns
     id: Mapped[UUID] = mapped_column(
@@ -29,10 +28,7 @@ class Base(DeclarativeBase):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert model to dictionary."""
-        return {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
-        }
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
 
 class TimestampMixin:

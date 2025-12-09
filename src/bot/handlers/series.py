@@ -1,14 +1,15 @@
 """Series management handlers."""
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from src.bot.keyboards import get_back_to_admin_keyboard
 from src.core import get_logger
 from src.infrastructure import UnitOfWork
 from src.infrastructure.database.models.series import SeriesModel
-from src.texts import messages, buttons
+from src.texts import buttons, messages
 
 logger = get_logger(__name__)
 
@@ -17,6 +18,7 @@ router = Router(name="series")
 
 class SeriesStates(StatesGroup):
     """States for series management."""
+
     waiting_name = State()
     waiting_description = State()
     add_movie_code = State()
@@ -84,7 +86,7 @@ async def handle_series_name(
     if len(name) < 2:
         await message.answer("❌ Nom juda qisqa!")
         return
-    
+
     await state.update_data(name=name)
     await message.answer(
         "📝 Tavsif kiriting (ixtiyoriy, /skip):",
@@ -101,16 +103,16 @@ async def handle_series_description(
 ) -> None:
     """Handle series description input."""
     description = None if message.text == "/skip" else message.text.strip()
-    
+
     data = await state.get_data()
-    
+
     series = SeriesModel(
         name=data["name"],
         description=description,
     )
     await uow.series.create(series)
     await state.clear()
-    
+
     await message.answer(
         f"✅ Serial yaratildi!\n\n📺 {data['name']}\n\nEndi kinolarni qo'shishingiz mumkin.",
         reply_markup=get_series_keyboard(),
@@ -125,7 +127,7 @@ async def callback_series_list(
 ) -> None:
     """Show series list."""
     series_list = await uow.series.get_all(limit=20)
-    
+
     if not series_list:
         await callback.message.edit_text(
             "📺 Seriallar ro'yxati\n\nSeriallar mavjud emas.",
@@ -133,12 +135,12 @@ async def callback_series_list(
         )
         await callback.answer()
         return
-    
+
     text = "📺 Seriallar ro'yxati\n\n"
     for i, s in enumerate(series_list, 1):
-        movies_count = len(s.movies) if hasattr(s, 'movies') else 0
+        movies_count = len(s.movies) if hasattr(s, "movies") else 0
         text += f"{i}. {s.name} ({movies_count} qism)\n"
-    
+
     await callback.message.edit_text(
         text,
         reply_markup=get_series_keyboard(),
@@ -170,19 +172,19 @@ async def handle_add_movie_code(
     if not message.text.isdigit():
         await message.answer("❌ Faqat raqam kiriting!")
         return
-    
+
     code = int(message.text)
     movie = await uow.movies.get_by_code(code)
-    
+
     if not movie:
         await message.answer(f"❌ Kod {code} topilmadi!")
         return
-    
+
     await state.update_data(movie_code=code, movie_id=str(movie.id))
-    
+
     # Show series list for selection
     series_list = await uow.series.get_all(limit=20)
-    
+
     if not series_list:
         await message.answer(
             "❌ Avval serial yarating!",
@@ -190,19 +192,19 @@ async def handle_add_movie_code(
         )
         await state.clear()
         return
-    
+
     keyboard = []
     for s in series_list:
-        keyboard.append([
-            InlineKeyboardButton(
-                text=s.name,
-                callback_data=f"series:select:{s.id}",
-            )
-        ])
-    keyboard.append([
-        InlineKeyboardButton(text=buttons.BTN_CANCEL, callback_data="admin:series")
-    ])
-    
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=s.name,
+                    callback_data=f"series:select:{s.id}",
+                )
+            ]
+        )
+    keyboard.append([InlineKeyboardButton(text=buttons.BTN_CANCEL, callback_data="admin:series")])
+
     await message.answer(
         f"📽 {movie.title}\n\nQaysi serialga qo'shmoqchisiz?",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard),
@@ -217,7 +219,7 @@ async def callback_select_series(
     """Handle series selection."""
     series_id = callback.data.split(":")[2]
     await state.update_data(series_id=series_id)
-    
+
     await callback.message.edit_text(
         "🔢 Qism raqamini kiriting (masalan: 1, 2, 3):",
         reply_markup=get_back_to_admin_keyboard(),
@@ -236,24 +238,25 @@ async def handle_add_movie_part(
     if not message.text.isdigit():
         await message.answer("❌ Faqat raqam kiriting!")
         return
-    
+
     part_number = int(message.text)
     data = await state.get_data()
-    
+
     from uuid import UUID
+
     movie = await uow.movies.get_by_code(data["movie_code"])
-    
+
     if movie:
         movie.series_id = UUID(data["series_id"])
         movie.part_number = part_number
         await uow.movies.update(movie)
-        
+
         await message.answer(
             f"✅ Kino serialga qo'shildi!\n\n📽 {movie.title}\n🔢 {part_number}-qism",
             reply_markup=get_series_keyboard(),
         )
         logger.info("movie_added_to_series", code=data["movie_code"], part=part_number)
-    
+
     await state.clear()
 
 

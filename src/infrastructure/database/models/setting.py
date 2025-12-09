@@ -1,6 +1,7 @@
 """Settings database model."""
+
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, Text, func
@@ -23,9 +24,9 @@ class SettingModel(Base):
 
     # Override default id with key as primary
     key: Mapped[str] = mapped_column(String(100), primary_key=True)
-    value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    value: Mapped[str | None] = mapped_column(Text, nullable=True)
     value_type: Mapped[str] = mapped_column(String(20), default="string")
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -33,7 +34,7 @@ class SettingModel(Base):
         onupdate=func.now(),
         nullable=False,
     )
-    updated_by: Mapped[Optional[UUID]] = mapped_column(
+    updated_by: Mapped[UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("admins.id", ondelete="SET NULL"),
         nullable=True,
@@ -53,6 +54,7 @@ class SettingModel(Base):
             return self.value.lower() in ("true", "1", "yes")
         elif self.value_type == "json":
             import json
+
             return json.loads(self.value)
         return self.value
 

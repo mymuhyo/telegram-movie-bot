@@ -1,4 +1,5 @@
 """Tests for settings repository and caching."""
+
 import pytest
 
 
