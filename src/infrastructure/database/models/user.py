@@ -12,7 +12,10 @@ from src.infrastructure.database.base import Base, SoftDeleteMixin, TimestampMix
 
 if TYPE_CHECKING:
     from src.infrastructure.database.models.download import DownloadModel
+    from src.infrastructure.database.models.favorite import FavoriteModel
+    from src.infrastructure.database.models.rating import RatingModel
     from src.infrastructure.database.models.request import MovieRequestModel
+    from src.infrastructure.database.models.user_series_progress import UserSeriesProgressModel
 
 
 class UserModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
@@ -54,6 +57,18 @@ class UserModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
         lazy="selectin",
     )
     requests: Mapped[list["MovieRequestModel"]] = relationship(
+        back_populates="user",
+        lazy="selectin",
+    )
+    ratings: Mapped[list["RatingModel"]] = relationship(
+        back_populates="user",
+        lazy="selectin",
+    )
+    favorites: Mapped[list["FavoriteModel"]] = relationship(
+        back_populates="user",
+        lazy="selectin",
+    )
+    series_progress: Mapped[list["UserSeriesProgressModel"]] = relationship(
         back_populates="user",
         lazy="selectin",
     )

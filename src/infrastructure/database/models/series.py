@@ -9,6 +9,7 @@ from src.infrastructure.database.base import Base, SoftDeleteMixin, TimestampMix
 
 if TYPE_CHECKING:
     from src.infrastructure.database.models.movie import MovieModel
+    from src.infrastructure.database.models.user_series_progress import UserSeriesProgressModel
 
 
 class SeriesModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
@@ -25,6 +26,10 @@ class SeriesModel(Base, TimestampMixin, SoftDeleteMixin, VersionMixin):
         back_populates="series",
         lazy="selectin",
         order_by="MovieModel.part_number",
+    )
+    user_progress: Mapped[list["UserSeriesProgressModel"]] = relationship(
+        back_populates="series",
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:

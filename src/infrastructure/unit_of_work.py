@@ -9,7 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from src.infrastructure.database.repositories import (
     AdminRepository,
     DownloadRepository,
+    FavoriteRepository,
+    GenreRepository,
     MovieRepository,
+    RatingRepository,
+    SeriesProgressRepository,
     SeriesRepository,
     SettingRepository,
     UserRepository,
@@ -25,6 +29,11 @@ class UnitOfWork:
     settings: SettingRepository
     downloads: DownloadRepository
     series: SeriesRepository
+    # New repositories
+    ratings: RatingRepository
+    favorites: FavoriteRepository
+    genres: GenreRepository
+    series_progress: SeriesProgressRepository
 
     def __init__(
         self,
@@ -43,6 +52,11 @@ class UnitOfWork:
         self.settings = SettingRepository(self._session)
         self.downloads = DownloadRepository(self._session)
         self.series = SeriesRepository(self._session)
+        # Initialize new repositories
+        self.ratings = RatingRepository(self._session)
+        self.favorites = FavoriteRepository(self._session)
+        self.genres = GenreRepository(self._session)
+        self.series_progress = SeriesProgressRepository(self._session)
         return self
 
     async def __aexit__(
@@ -70,3 +84,7 @@ class UnitOfWork:
         """Flush pending changes."""
         if self._session:
             await self._session.flush()
+
+
+# Alias for new architecture compatibility
+SQLAlchemyUnitOfWork = UnitOfWork
