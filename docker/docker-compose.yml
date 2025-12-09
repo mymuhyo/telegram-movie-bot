@@ -1,9 +1,26 @@
+# =============================================================================
+# Movie Bot Docker Compose Configuration
+# =============================================================================
+# Usage:
+#   Production: docker compose up -d
+#   Development: docker compose --profile dev up -d
+#   Rebuild: docker compose up -d --build
+# =============================================================================
+
 services:
+  # ===========================================================================
+  # Bot Application
+  # ===========================================================================
   bot:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      target: production
+    container_name: moviebot_app
     env_file: ../.env
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
     restart: unless-stopped
     depends_on:
       postgres:
@@ -12,61 +29,131 @@ services:
         condition: service_healthy
     volumes:
       - ../backups:/app/backups
+      - ../logs:/app/logs
     networks:
       - bot_network
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "3"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
 
+  # ===========================================================================
+  # PostgreSQL Database
+  # ===========================================================================
   postgres:
     image: postgres:15-alpine
+    container_name: moviebot_db
     environment:
       POSTGRES_DB: ${DB_NAME:-moviebot}
       POSTGRES_USER: ${DB_USER:-moviebot}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-moviebot123}
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ../backups/postgres:/backups
     ports:
-      - "5433:5432"  # Changed to 5433 to avoid port conflict
+      - "${DB_PORT:-5433}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-moviebot}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-moviebot} -d ${DB_NAME:-moviebot}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     networks:
       - bot_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
 
+  # ===========================================================================
+  # Redis Cache
+  # ===========================================================================
   redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes
+    container_name: moviebot_cache
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 100mb
+      --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
     networks:
       - bot_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
 
-  # Database management UI (optional, dev only)
+  # ===========================================================================
+  # Database Management UI (Development only)
+  # ===========================================================================
   adminer:
-    image: adminer
+    image: adminer:latest
+    container_name: moviebot_adminer
     ports:
       - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
     networks:
       - bot_network
     profiles:
       - dev
+    depends_on:
+      - postgres
 
+  # ===========================================================================
+  # Redis Commander (Development only)
+  # ===========================================================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: moviebot_redis_ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - bot_network
+    profiles:
+      - dev
+    depends_on:
+      - redis
+
+# =============================================================================
+# Volumes
+# =============================================================================
 volumes:
   postgres_data:
+    name: moviebot_postgres_data
   redis_data:
+    name: moviebot_redis_data
 
+# =============================================================================
+# Networks
+# =============================================================================
 networks:
   bot_network:
+    name: moviebot_network
     driver: bridge

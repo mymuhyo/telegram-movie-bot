@@ -1,40 +1,86 @@
-FROM python:3.11-slim as builder
+# =============================================================================
+# Stage 1: Builder
+# =============================================================================
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and build wheels
+# Install pip and build wheels
 COPY requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
-
-FROM python:3.11-slim
+# =============================================================================
+# Stage 2: Production
+# =============================================================================
+FROM python:3.11-slim AS production
 
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+# Create non-root user for security
+RUN groupadd --gid 1000 botuser \
+    && useradd --uid 1000 --gid 1000 --shell /bin/bash --create-home botuser
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Copy wheels and install
 COPY --from=builder /app/wheels /wheels
-RUN pip install --no-cache /wheels/*
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir /wheels/* \
+    && rm -rf /wheels
 
-# Copy application
-COPY . .
+# Copy application code
+COPY --chown=botuser:botuser . .
 
-# Set environment
-ENV PYTHONPATH=/app/src
-ENV PYTHONUNBUFFERED=1
+# Create necessary directories
+RUN mkdir -p /app/backups /app/logs \
+    && chown -R botuser:botuser /app/backups /app/logs
 
-# Create backups directory
-RUN mkdir -p /app/backups
+# Set environment variables
+ENV PYTHONPATH=/app/src \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Run bot
+# Switch to non-root user
+USER botuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)" || exit 1
+
+# Default command
+CMD ["python", "-m", "src.bot.main"]
+
+# =============================================================================
+# Stage 3: Development (optional)
+# =============================================================================
+FROM production AS development
+
+USER root
+
+# Install dev dependencies
+RUN pip install --no-cache-dir \
+    pytest \
+    pytest-asyncio \
+    pytest-cov \
+    black \
+    ruff \
+    mypy
+
+USER botuser
+
+# Override command for development
 CMD ["python", "-m", "src.bot.main"]
