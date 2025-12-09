@@ -317,8 +317,34 @@ Qismlar:
 
 # Recommendations
 RECOMMENDATIONS_TITLE = "🎯 *Sizga tavsiya*"
-RECOMMENDATIONS_EMPTY = "Tavsiyalar uchun bir nechta kino ko'ring yoki baholang."
-SIMILAR_MOVIES_TITLE = "🎬 O'xshash kinolar"
+RECOMMENDATIONS_HEADER = """🎯 *Sizga tavsiya*
+
+Sizning didingizga mos kinolar:"""
+RECOMMENDATIONS_EMPTY = """📭 *Tavsiyalar uchun ma'lumot yetarli emas*
+
+Botdan ko'proq foydalaning:
+• Kinolarni ko'ring
+• Baholang ⭐
+• Sevimlilarga qo'shing ❤️
+
+Shunda sizga mos tavsiyalar chiqadi!"""
+SIMILAR_MOVIES_TITLE = "🎬 *O'xshash kinolar*"
+SIMILAR_MOVIES_HEADER = """🎬 *O'xshash kinolar*
+
+*{title}* ga o'xshash:"""
+SIMILAR_MOVIES_EMPTY = "❌ *{title}* ga o'xshash kinolar topilmadi"
+POPULAR_MOVIES_HEADER = """🔥 *Mashhur kinolar*
+
+Eng ko'p yuklangan kinolar:"""
+TOP_RATED_HEADER = """⭐ *Eng yaxshilari*
+
+Eng yuqori baholangan kinolar:"""
+RECENT_MOVIES_HEADER = """🆕 *Yangi kinolar*
+
+Yaqinda qo'shilgan kinolar:"""
+CONTINUE_WATCHING_HEADER = """▶️ *Davom etish*
+
+Siz ko'rayotgan seriallar:"""
 
 # Requests
 REQUEST_START = """📝 Kino so'rovi
