@@ -3,5 +3,6 @@
 from src.presentation.keyboards.user.favorite import FavoriteKeyboard
 from src.presentation.keyboards.user.movie_card import MovieCardKeyboard
 from src.presentation.keyboards.user.rating import RatingKeyboard
+from src.presentation.keyboards.user.series import SeriesKeyboard
 
-__all__ = ["MovieCardKeyboard", "RatingKeyboard", "FavoriteKeyboard"]
+__all__ = ["MovieCardKeyboard", "RatingKeyboard", "FavoriteKeyboard", "SeriesKeyboard"]
