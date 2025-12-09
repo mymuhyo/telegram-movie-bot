@@ -288,6 +288,38 @@ YES = "✅ Ha"
 NO = "❌ Yo'q"
 SKIP = "⏭ O'tkazish"
 
+# Rating
+RATING_PROMPT = """⭐ *{title}* ni baholang
+
+1-5 orasida tanlang:"""
+RATING_SUCCESS = "✅ Rahmat! *{title}* uchun bahongiz: {stars}"
+RATING_UPDATED = "✅ Bahongiz yangilandi: {stars}"
+RATING_CANCELLED = "❌ Baholash bekor qilindi"
+
+# Favorites
+FAVORITES_TITLE = "❤️ *Sevimli kinolar*"
+FAVORITES_EMPTY = """📭 Sevimlilar ro'yxati bo'sh
+
+Kino kartasidagi ❤️ tugmasini bosib qo'shishingiz mumkin."""
+FAVORITE_ADDED = "❤️ Sevimlilarga qo'shildi!"
+FAVORITE_REMOVED = "💔 Sevimlilardan olib tashlandi"
+FAVORITE_EXISTS = "Allaqachon sevimlilarda"
+
+# Series
+SERIES_TITLE = "📺 *{name}*"
+SERIES_PROGRESS = "Ko'rilgan: {watched}/{total} qism ({percent}%)"
+SERIES_CONTINUE = "▶️ Davom etish: {part}-qism"
+SERIES_COMPLETED = "✅ Serial to'liq ko'rilgan!"
+SERIES_PARTS_LIST = """📺 *{name}*
+
+Qismlar:
+{parts}"""
+
+# Recommendations
+RECOMMENDATIONS_TITLE = "🎯 *Sizga tavsiya*"
+RECOMMENDATIONS_EMPTY = "Tavsiyalar uchun bir nechta kino ko'ring yoki baholang."
+SIMILAR_MOVIES_TITLE = "🎬 O'xshash kinolar"
+
 # Requests
 REQUEST_START = """📝 Kino so'rovi
 
