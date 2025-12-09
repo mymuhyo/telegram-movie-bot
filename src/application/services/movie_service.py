@@ -211,6 +211,84 @@ class MovieService:
         async with self._uow:
             return await self._uow.movies.count()
 
+    async def search_advanced(
+        self,
+        query: str,
+        filters: SearchFilters,
+        page: int = 1,
+        per_page: int = 10,
+    ) -> SearchResult:
+        """
+        Advanced search with multiple filters.
+
+        Args:
+            query: Search query
+            filters: Search filters
+            page: Page number
+            per_page: Results per page
+
+        Returns:
+            Search result with movies and pagination
+        """
+        async with self._uow:
+            # Get all movies matching query
+            movies = await self._uow.movies.search(
+                query=query,
+                year=filters.year,
+                quality=filters.quality,
+                genre_id=filters.genre_id,
+                limit=100,  # Get more for filtering
+            )
+
+            # Apply additional filters
+            filtered = []
+            for movie in movies:
+                # Year range filter
+                if filters.year_from and movie.year and movie.year < filters.year_from:
+                    continue
+                if filters.year_to and movie.year and movie.year > filters.year_to:
+                    continue
+
+                # Minimum rating filter
+                if filters.min_rating:
+                    if float(movie.average_rating) < filters.min_rating:
+                        continue
+
+                # Series only filter
+                if filters.series_only and not movie.series_id:
+                    continue
+
+                filtered.append(movie)
+
+            # Sort results
+            if filters.sort_by == "rating":
+                filtered.sort(key=lambda m: float(m.average_rating), reverse=True)
+            elif filters.sort_by == "downloads":
+                filtered.sort(key=lambda m: m.download_count, reverse=True)
+            elif filters.sort_by == "newest":
+                filtered.sort(key=lambda m: m.year or 0, reverse=True)
+            # Default: relevance (original order)
+
+            # Total count before pagination
+            total = len(filtered)
+
+            # Apply pagination
+            start = (page - 1) * per_page
+            end = start + per_page
+            paginated = filtered[start:end]
+
+            # Convert to DTOs
+            movie_dtos = [self._to_dto(m) for m in paginated]
+
+            return SearchResult(
+                movies=movie_dtos,
+                total=total,
+                query=query,
+                filters=filters,
+                page=page,
+                per_page=per_page,
+            )
+
     def _to_dto(self, movie: Movie) -> MovieDTO:
         """Convert entity to DTO."""
         return MovieDTO(

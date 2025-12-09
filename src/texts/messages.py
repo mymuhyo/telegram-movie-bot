@@ -346,6 +346,36 @@ CONTINUE_WATCHING_HEADER = """▶️ *Davom etish*
 
 Siz ko'rayotgan seriallar:"""
 
+# Search
+SEARCH_HELP = """🔍 *Qidiruv*
+
+Kino kodini yoki nomini yuboring:
+
+📝 *Misollar:*
+• `123` - kod bo'yicha
+• `Qasoskorlar` - nom bo'yicha
+• `Marvel 2023` - nom + yil
+
+Yoki quyidagilardan birini tanlang:"""
+SEARCH_RESULTS_HEADER = "🔍 *Natijalar:* {query}"
+SEARCH_NO_RESULTS = "❌ *Topilmadi:* {query}"
+SEARCH_FILTERS_HEADER = """🔧 *Qidiruv filtrlari*
+
+Quyidagi filtrlarni tanlang:"""
+SEARCH_YEAR_FILTER = """📅 *Yilni tanlang*
+
+Kino chiqarilgan yilni tanlang:"""
+SEARCH_QUALITY_FILTER = """📺 *Sifatni tanlang*
+
+Video sifatini tanlang:"""
+SEARCH_RATING_FILTER = """⭐ *Minimal reytingni tanlang*
+
+Faqat shu reytingdan yuqori kinolar ko'rsatiladi:"""
+SEARCH_SORT_OPTIONS = """🔄 *Saralash*
+
+Natijalarni qanday saralash kerak:"""
+SEARCH_HINT = "💡 Kino kodini yoki nomini yuboring"
+
 # Requests
 REQUEST_START = """📝 Kino so'rovi
 
