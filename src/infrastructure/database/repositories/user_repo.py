@@ -54,8 +54,18 @@ class UserRepository(SoftDeleteRepository[UserModel]):
             full_name=full_name,
             last_active_at=datetime.now(UTC),
         )
-        await self.create(user)
-        return user, True
+
+        try:
+            await self.create(user)
+            return user, True
+        except Exception:
+            # Race condition: user was created by another transaction
+            # Fetch and return the existing user
+            await self._session.rollback()
+            user = await self.get_by_telegram_id(telegram_id)
+            if user:
+                return user, False
+            raise  # Re-raise if user still not found (unexpected error)
 
     async def update_activity(self, user_id: UUID) -> None:
         """Update user's last active timestamp."""
