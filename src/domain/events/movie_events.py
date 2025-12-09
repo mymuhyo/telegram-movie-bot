@@ -51,3 +51,47 @@ class MovieDeleted(DomainEvent):
     movie_id: UUID = field(default_factory=lambda: UUID(int=0))
     movie_code: int = 0
     deleted_by: int = 0
+
+
+@dataclass
+class FavoriteAdded(DomainEvent):
+    """Event raised when user adds movie to favorites."""
+
+    event_type: ClassVar[str] = "favorite_added"
+
+    movie_id: UUID = field(default_factory=lambda: UUID(int=0))
+    user_id: UUID = field(default_factory=lambda: UUID(int=0))
+
+
+@dataclass
+class FavoriteRemoved(DomainEvent):
+    """Event raised when user removes movie from favorites."""
+
+    event_type: ClassVar[str] = "favorite_removed"
+
+    movie_id: UUID = field(default_factory=lambda: UUID(int=0))
+    user_id: UUID = field(default_factory=lambda: UUID(int=0))
+
+
+@dataclass
+class SeriesPartWatched(DomainEvent):
+    """Event raised when user watches a series part."""
+
+    event_type: ClassVar[str] = "series_part_watched"
+
+    series_id: UUID = field(default_factory=lambda: UUID(int=0))
+    user_id: UUID = field(default_factory=lambda: UUID(int=0))
+    part_number: int = 0
+    total_parts: int = 0
+
+
+@dataclass
+class SearchPerformed(DomainEvent):
+    """Event raised when user performs a search."""
+
+    event_type: ClassVar[str] = "search_performed"
+
+    user_id: UUID = field(default_factory=lambda: UUID(int=0))
+    query: str = ""
+    results_count: int = 0
+    has_filters: bool = False
